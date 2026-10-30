@@ -19,6 +19,7 @@ import { CURRENT_TERMS_VERSION } from "@/shared/terms";
 import { getAuthMode, isHostedAuthMode, usesBetterAuth } from "@/lib/auth-mode";
 import { createApiKeyPlugin } from "@/lib/auth-api-key";
 import { getActiveOrganizationId } from "@/lib/auth-session";
+import { sessionIdleOptions } from "@/lib/auth-session-idle";
 import { createBaseAuthConfig } from "@/lib/auth-config";
 import {
   getHostedTurnstileSecretKey,
@@ -190,9 +191,11 @@ function createAuth() {
     // Standalone reads every session from the database so an operator
     // password reset revokes it at once; hosted keeps the signed-cookie cache
     // (see auth-options.ts for the trade-off).
-    session: standalone
-      ? { ...baseAuthConfig.session, cookieCache: { enabled: false } }
-      : baseAuthConfig.session,
+    session: {
+      ...baseAuthConfig.session,
+      ...(standalone ? { cookieCache: { enabled: false } } : {}),
+      ...sessionIdleOptions(env),
+    },
     // Better Auth turns its rate limiter on only when NODE_ENV is
     // "production", which the standalone runtime does not set, so password
     // guessing against /sign-in/email was unlimited there. The memory store
