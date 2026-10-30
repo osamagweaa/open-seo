@@ -54,6 +54,8 @@ const allowed = [
   "OPENROUTER_MODEL",
   "GOOGLE_CLIENT_ID",
   "GOOGLE_CLIENT_SECRET",
+  "GOOGLE_MAPS_API_KEY",
+  "CRAWLER_ACCESS_SECRET",
 ];
 config.vars = {
   ...secrets,
