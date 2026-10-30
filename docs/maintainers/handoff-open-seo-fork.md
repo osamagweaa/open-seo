@@ -18,6 +18,7 @@ You are continuing work from a previous chat. That chat is gone; this file is th
 - **Goal:** Make the fork `osamagweaa/open-seo` an end-to-end working, self-hosted SEO tool that runs on the user's own infrastructure with no dependency on the upstream maintainer's accounts.
 - **Done looks like:** The app is deployed, the user signs in, and the SEO data features return real data from their own DataForSEO key.
 - **Why it matters / context:** The user pays for their own infrastructure and data. The user has Runpod credit and does not use Cloudflare.
+- **New requirement, added after the first handoff was written (user's words):** "It should be automatically, like when I open the, when I access my admin account, it start running. If when I, when it's stale, ideal, and should be logged out automatically after 5 minutes or maybe more, less. And when it logged out, the pod should be stopped running automatically." Meaning: the pod starts when the user opens the app, the app logs the user out after idle time (about 5 minutes, adjustable), and the pod then stops by itself. Not built yet.
 
 ## 2. About the user (as relevant to this work)
 
@@ -117,6 +118,9 @@ You are continuing work from a previous chat. That chat is gone; this file is th
 - Editing a pod's environment resets the pod. The app then rebuilds in about 4 minutes.
 - HTTP proxy requests time out at 100 seconds. The proxy URL is public and unauthenticated; only the app's own accounts protect it.
 - A stopped pod bills no compute. The volume keeps billing.
+- A pod can stop itself: Runpod docs say to run `runpodctl pod stop $RUNPOD_POD_ID` from inside it, and that pods ship `runpodctl` and a pod-scoped API key. The stock `node:22` image used here is not an official Runpod image, so whether `RUNPOD_API_KEY` and `runpodctl` exist in it is unverified. Fallback: call the REST API with a key.
+- A stopped pod stays tied to its machine and resumes there. For GPU pods the REST start fails if another user took the GPU. Whether a stopped CPU pod can fail to restart is not documented in what was read. Fallback: terminate and recreate the pod with the same network volume; the pod id and proxy URL then change.
+- The app has no session settings in `src/lib/auth-config.ts`, so sign-in sessions use Better Auth defaults (believed to be 7 days, refreshed daily; from library knowledge, verify before relying on it).
 
 **DataForSEO**
 
@@ -154,11 +158,21 @@ You are continuing work from a previous chat. That chat is gone; this file is th
 
 ## 11. Next steps
 
-1. **Next action:** The user signs up at DataForSEO, copies the Base64 credentials, and adds `DATAFORSEO_API_KEY` in the Runpod console under Edit Pod. Then run one keyword search to confirm data returns. Test with the $1 trial credit before any $50 top-up.
-2. If pausing: stop the pod with the Runpod `pod-action` stop on `jl8n558l4bwyu3`. Compute billing stops; the volume keeps its data.
-3. When the user decides, merge PR #1, then change the pod's clone branch to `main` and update `docs/SELF_HOSTING_RUNPOD.md` if needed.
-4. Optional: connect Google Search Console with the user's own Google OAuth app; add `OPENROUTER_API_KEY` for the SAM agent.
-5. Optional: add scheduled Local SEO checks as a new feature.
+1. **Next action:** Get the user's approval on the auto-stop and wake-on-access design below, then build it in small pull requests. Nothing is built yet.
+2. The user signs up at DataForSEO, copies the Base64 credentials, and adds `DATAFORSEO_API_KEY` in the Runpod console under Edit Pod. Then run one keyword search to confirm data returns. Test with the $1 trial credit before any $50 top-up.
+3. If pausing: stop the pod with the Runpod `pod-action` stop on `jl8n558l4bwyu3`. Compute billing stops; the volume keeps its data.
+4. When the user decides, merge PR #1, then change the pod's clone branch to `main` and update `docs/SELF_HOSTING_RUNPOD.md` if needed.
+5. Optional: connect Google Search Console with the user's own Google OAuth app; add `OPENROUTER_API_KEY` for the SAM agent.
+6. Optional: add scheduled Local SEO checks as a new feature.
+
+**Design proposal for item 1 (not approved yet):**
+
+- **Idle logout, in the app.** Add an env setting, for example `OPENSEO_SESSION_IDLE_MINUTES`, that sets Better Auth `session.expiresIn` to that many minutes with a short `updateAge`, so activity keeps the session alive and idle ends it. Default stays the current behavior. Change goes in `src/lib/auth-config.ts` with a test.
+- **Idle stop, in the pod.** A watcher started by `deploy/runpod/start.sh` stops the pod after the idle period with no real activity. Count requests, not just browser sessions, so agents using an API key through `/mcp` are not cut off. Ignore `/api/health` and the loopback scheduler. Do not stop while a site audit or workflow is running. Stop through the Runpod API.
+- **Wake on access.** A stopped pod has no public address, so something always on must receive the visit. Recommended: a free Cloudflare Worker, holding a Runpod API key as a secret. It checks the pod, starts it if stopped, shows a "starting" page that refreshes, then reverse-proxies to the pod, including WebSockets for SAM. Set `BETTER_AUTH_URL` to the Worker's address so sign-in stays on one stable address. Alternative: a Vercel function, which cannot proxy WebSockets.
+- **Faster wake.** Today every start reclones, installs and builds, about 3.5 minutes (first deploy: created 22:18:54, health 200 at 22:22:13). Build once and keep the build on the network volume, or publish a prebuilt image from GitHub Actions, so a wake takes about a minute.
+- **Trade-offs to state to the user.** Rank tracking and AI visibility checks only run while the pod is up, so they are skipped while stopped. Stopping kills anything still running. The wake address is public and can start the pod, which costs a few cents, and the app login still protects the data. Example cost at one hour of use per day: 0.08 x 30 = $2.40 per month plus about $0.70 for the volume.
+- **Needs the user.** A free Cloudflare account (or Vercel), and a Runpod API key created in the Runpod console and stored as a Worker secret by the user, never pasted into chat.
 
 ## 12. Open questions
 
@@ -166,6 +180,9 @@ You are continuing work from a previous chat. That chat is gone; this file is th
 - Does the $1 DataForSEO trial credit work over the REST API? The pricing page mentions the Playground, MCP and integrations. Unverified.
 - Which app features work with no DataForSEO key? From the code inventory, the site audit crawler, Search Console views, reports and project context do not need it, and Lighthouse does. Not verified on the pod.
 - Should the pod keep running while the user decides on the key? It costs $0.08 per hour.
+- Front door for wake-on-access: Cloudflare Worker (recommended) or Vercel? "I don't use it" may rule out Cloudflare; confirm.
+- Idle rule: log out after 5 minutes idle and stop the pod at the same time, or give a longer grace period before stopping? Does an agent using `/mcp` with an API key count as activity? Recommended: yes.
+- Is it acceptable that scheduled rank tracking and AI visibility checks pause while the pod is stopped?
 
 ## 13. Re-attach checklist
 
