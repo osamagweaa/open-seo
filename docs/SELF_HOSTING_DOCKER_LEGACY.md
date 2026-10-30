@@ -46,11 +46,11 @@ You can also persist it in `.env`.
 
 ## Telemetry
 
-OpenSEO collects anonymized telemetry for core usage events: heartbeats with aggregate counts (installs, users, projects, feature usage) tied to a random install ID, sent every 5 minutes during the first two hours after install, then at most once daily. Telemetry also includes failed setup check names and statuses, never values or error messages. No URLs, keywords, prompts, emails, or IP-derived location are collected, and idle installs send nothing.
+Telemetry is off unless you turn it on. Nothing leaves your deployment by default.
 
-Heartbeats are triggered by requests to the app or MCP server. Requests to `/api/health`, including Docker's automatic health checks, do not trigger telemetry.
+To send anonymized usage heartbeats to your own PostHog project, set `OPENSEO_TELEMETRY_POSTHOG_KEY` (and `OPENSEO_TELEMETRY_POSTHOG_HOST` if you are not on `https://us.i.posthog.com`) in `.env`, then run `docker compose up -d --force-recreate open-seo`. Heartbeats carry aggregate counts (users, projects, feature usage) tied to a random install ID, plus failed setup check names and statuses, never values or error messages. No URLs, keywords, prompts, emails, or IP-derived location are collected, and idle installs send nothing.
 
-To disable it, set `OPENSEO_TELEMETRY_DISABLED=1` (or `DO_NOT_TRACK=1`) in `.env`, then run `docker compose up -d --force-recreate open-seo`.
+Requests to `/api/health`, including Docker's automatic health checks, do not trigger telemetry. `OPENSEO_TELEMETRY_DISABLED=1` or `DO_NOT_TRACK=1` turns it off even when a key is set.
 
 ## Pin to a specific image tag
 

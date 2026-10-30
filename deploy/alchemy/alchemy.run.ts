@@ -302,6 +302,8 @@ const dataEnv = {
   // must come from the env file / GitHub environment — a dashboard-set one
   // would be wiped.
   OPENSEO_TELEMETRY_DISABLED: optionalVar("OPENSEO_TELEMETRY_DISABLED"),
+  OPENSEO_TELEMETRY_POSTHOG_KEY: optionalVar("OPENSEO_TELEMETRY_POSTHOG_KEY"),
+  OPENSEO_TELEMETRY_POSTHOG_HOST: optionalVar("OPENSEO_TELEMETRY_POSTHOG_HOST"),
 };
 
 export default Alchemy.Stack(

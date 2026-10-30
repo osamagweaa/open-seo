@@ -7,7 +7,7 @@
 # rebuilds.
 set -e
 
-echo 'OpenSEO sends an anonymous usage heartbeat (counts only). Disable: OPENSEO_TELEMETRY_DISABLED=1. Details: docs/SELF_HOSTING_DOCKER_LEGACY.md#telemetry'
+echo 'OpenSEO telemetry is off unless OPENSEO_TELEMETRY_POSTHOG_KEY is set. Details: docs/SELF_HOSTING_DOCKER_LEGACY.md#telemetry'
 
 # The preflight validates env BEFORE the slow steps, so misconfiguration fails
 # in seconds with the exact fix instead of after a multi-minute build.
