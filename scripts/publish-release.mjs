@@ -44,7 +44,7 @@ const args = [
   "create",
   tag,
   "--repo",
-  "every-app/open-seo",
+  "osamagweaa/open-seo",
   "--title",
   tag,
   "--notes-file",

@@ -1,0 +1,67 @@
+name: Deploy Self-Host
+
+# Deploys this fork to its own Cloudflare account: the same command as a local
+# `pnpm deploy:selfhost` (stage "selfhost"). Manual only, and only from main on
+# this repository, so deploy secrets never run branch or fork code.
+#
+# One-time setup, run locally against the target account: `pnpm alchemy login`
+# then `pnpm alchemy cloudflare bootstrap`. Alchemy keeps its state in the
+# account's state store, and CI reads the store's token from the Secrets Store.
+#
+# Required repo secrets: CLOUDFLARE_API_TOKEN (Workers Scripts/KV/D1/R2/
+# Workflows write + Secrets Store read + Account Settings read, the same scopes
+# as pr-preview.yml), CLOUDFLARE_ACCOUNT_ID, ENV_SELFHOST (the contents of
+# .env.selfhost; see deploy/.env.selfhost.example).
+#
+# Optional repo variable: OPENSEO_URL (the deployed Worker URL). When set, the
+# job finishes by checking /api/health.
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-selfhost
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+jobs:
+  deploy:
+    if: github.repository == 'osamagweaa/open-seo' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Write .env.selfhost
+        run: printf '%s' "$ENV_SELFHOST" > .env.selfhost
+        env:
+          ENV_SELFHOST: ${{ secrets.ENV_SELFHOST }}
+
+      - name: Deploy
+        run: pnpm deploy:selfhost --yes
+
+      - name: Check health
+        if: ${{ vars.OPENSEO_URL != '' }}
+        run: curl --fail --silent --show-error --retry 5 --retry-delay 5 --retry-all-errors "$OPENSEO_URL/api/health"
+        env:
+          OPENSEO_URL: ${{ vars.OPENSEO_URL }}

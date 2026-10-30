@@ -10,17 +10,9 @@ Connect with any agent like Claude Code, OpenClaw or Hermes. We have pre-built s
 
 <img width="100%" alt="openseo-keyword-research" src="https://github.com/user-attachments/assets/8ebdc439-3e72-41ab-8bde-8cda771ef2e8" />
 
-## Hosted Version
+## About this fork
 
-Try OpenSEO for free on our website. If you want to support the project, a hosted subscription is $10/month.
-
-[openseo.so](https://openseo.so)
-
-### EveryApp
-
-Host OpenSEO and other open source apps on our platform EveryApp.
-
-[Self-host on EveryApp and give it a star →](https://github.com/every-app/every-app)
+This is a self-hosted fork of [every-app/open-seo](https://github.com/every-app/open-seo) (MIT). It has no hosted service, billing or account tie to the original project. You run it on your own Cloudflare account or server.
 
 ## Why use OpenSEO?
 
@@ -66,7 +58,7 @@ Either way, you need a DataForSEO API key to get SEO data. See [`docs/DATAFORSEO
 
 ## Costs
 
-OpenSEO needs a [DataForSEO](https://dataforseo.com/?aff=255379) API key so that you can get SEO data. You pay them directly when self hosting.
+OpenSEO needs a [DataForSEO](https://dataforseo.com/) API key so that you can get SEO data. You pay them directly when self hosting.
 
 See [openseo.so/pricing](https://openseo.so/pricing)
 
@@ -85,14 +77,9 @@ Read more here: [`docs/CONTRIBUTING.md`](./docs/CONTRIBUTING.md)
 We have this skill: `/simple-issue-description` which helps.
 
 ```sh
-npx skills add every-app/open-seo --skill simple-issue-description
+npx skills add osamagweaa/open-seo --skill simple-issue-description
 ```
 
-## Community
+## Support
 
-Join Discord to chat: [Discord](https://discord.gg/c9uGs3cFXr)
-
-Follow along for updates:
-
-- Follow on X: https://x.com/bensenescu
-- Sign up for the mailing list on our website: [openseo.so](https://openseo.so)
+Report bugs and request features in [GitHub Issues](https://github.com/osamagweaa/open-seo/issues).
