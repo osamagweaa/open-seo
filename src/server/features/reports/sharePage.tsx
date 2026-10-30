@@ -8,6 +8,7 @@ import {
 import { REPORT_IFRAME_SANDBOX } from "@/shared/report-sandbox";
 import { sharePath } from "@/shared/report-share";
 import { domainField } from "@/types/schemas/domain";
+import { PROJECT_WEBSITE_URL } from "@/shared/links";
 
 // The public face of a shared report, `/s/<token>`: a slim bar and the
 // document in the same sandboxed frame the in-app viewer uses. Rendered to a
@@ -19,7 +20,7 @@ import { domainField } from "@/types/schemas/domain";
 // JavaScript beyond the Share button's clipboard handler. JSX so every value
 // from the row is escaped by React, not by hand.
 
-const MARKETING_URL = "https://openseo.so/?utm_source=shared_report";
+const MARKETING_URL = PROJECT_WEBSITE_URL;
 
 const MAX_DESCRIPTION_CHARS = 200;
 

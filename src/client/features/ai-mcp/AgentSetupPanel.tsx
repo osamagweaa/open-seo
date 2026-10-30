@@ -1,6 +1,7 @@
 import type { ComponentProps, ReactNode } from "react";
 import { Package } from "lucide-react";
 import { CopyButton } from "@/client/components/CopyButton";
+import { repoFileUrl } from "@/shared/links";
 
 export const AGENT_SETUP_DESCRIPTION =
   "Paste this prompt into your agent to automatically configure OpenSEO for you.";
@@ -52,7 +53,7 @@ export function AgentSetupPanel({
       </div>
       <div className="mt-4 text-center">
         <a
-          href="https://openseo.so/docs/agent-setup"
+          href={repoFileUrl("web/content/docs/agent-setup.mdx")}
           target="_blank"
           rel="noreferrer"
           className="text-xs text-muted-foreground underline decoration-muted-foreground/25 underline-offset-4 hover:text-foreground"

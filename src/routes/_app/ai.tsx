@@ -27,10 +27,11 @@ import {
 } from "@/client/features/ai-mcp/agentSetupPrompt";
 import { CopyButton } from "@/client/components/CopyButton";
 import { AgentList } from "@/client/features/ai-mcp/AgentList";
+import { REPO_SLUG, repoFileUrl } from "@/shared/links";
 
-const DOCS_URL = "https://openseo.so/docs/agent-setup";
+const DOCS_URL = repoFileUrl("web/content/docs/agent-setup.mdx");
 
-const COACH_DOCS_URL = "https://openseo.so/docs/skills/seo-coach";
+const COACH_DOCS_URL = repoFileUrl("web/content/docs/skills/seo-coach.mdx");
 const LINK_CLASS =
   "text-foreground underline decoration-foreground/25 underline-offset-4 hover:decoration-foreground";
 const MUTED_LINK_CLASS =
@@ -206,7 +207,9 @@ function AiPage() {
                       cannot connect until Managed OAuth is enabled on your
                       Access application.{" "}
                       <a
-                        href="https://openseo.so/docs/self-hosting/cloudflare#connect-the-mcp-server-through-cloudflare-access"
+                        href={repoFileUrl(
+                          "docs/SELF_HOSTING_CLOUDFLARE_OPERATIONS.md#through-cloudflare-access",
+                        )}
                         target="_blank"
                         rel="noreferrer"
                         className="font-medium"
@@ -237,7 +240,7 @@ function AiPage() {
             <section className="mt-6">
               <p className="text-sm text-muted-foreground">
                 {everyApp
-                  ? "Install them with npx skills add every-app/open-seo."
+                  ? `Install them with npx skills add ${REPO_SLUG}.`
                   : "The setup prompt installs these."}{" "}
                 Run one by name when you want a full report instead of a quick
                 answer.
@@ -249,7 +252,7 @@ function AiPage() {
                     className="flex flex-col gap-0.5 sm:flex-row sm:gap-3"
                   >
                     <a
-                      href={`https://openseo.so/docs/skills/${name}`}
+                      href={repoFileUrl(`web/content/docs/skills/${name}.mdx`)}
                       target="_blank"
                       rel="noreferrer"
                       className={`shrink-0 font-mono text-[13px] sm:w-48 ${LINK_CLASS}`}
@@ -268,7 +271,7 @@ function AiPage() {
   );
 }
 
-const EVERY_APP_SKILLS_COMMAND = "npx skills add every-app/open-seo";
+const EVERY_APP_SKILLS_COMMAND = `npx skills add ${REPO_SLUG}`;
 
 /**
  * Behind Every App the agent connects to the gateway's MCP address, which

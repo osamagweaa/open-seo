@@ -36,7 +36,7 @@ import {
   HttpStatusBadge,
   StatusBadge,
 } from "@/client/features/audit/shared";
-import { SUPPORT_EMAIL } from "@/client/lib/support";
+import { ISSUES_URL } from "@/shared/links";
 
 export function AuditDetail({
   projectId,
@@ -151,9 +151,11 @@ export function AuditDetail({
             </AlertTitle>
             <AlertDescription>
               <p>
-                Run a new audit to try again, or email{" "}
-                <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a> if this
-                keeps happening.
+                Run a new audit to try again, or open an issue on{" "}
+                <a href={ISSUES_URL} target="_blank" rel="noreferrer">
+                  GitHub
+                </a>{" "}
+                if this keeps happening.
               </p>
               {status.errorCode ? (
                 <p className="font-mono text-xs">Code: {status.errorCode}</p>
@@ -186,9 +188,11 @@ export function AuditDetail({
             </AlertTitle>
             <AlertDescription>
               The results below cover everything crawled before it stopped. Run
-              a new audit to try again, or email{" "}
-              <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a> if this
-              keeps happening.
+              a new audit to try again, or open an issue on{" "}
+              <a href={ISSUES_URL} target="_blank" rel="noreferrer">
+                GitHub
+              </a>{" "}
+              if this keeps happening.
             </AlertDescription>
           </Alert>
         )}

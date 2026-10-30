@@ -345,7 +345,7 @@ describe("Codex-style OAuth token refresh (real workers-oauth-provider)", () => 
       .parse(await expired.json());
     expect(body.error).toBe("invalid_grant");
     expect(body.error_description).toContain(
-      "https://openseo.so/docs/agent-setup",
+      "https://github.com/osamagweaa/open-seo/blob/main/web/content/docs/agent-setup.mdx",
     );
   });
 

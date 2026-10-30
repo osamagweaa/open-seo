@@ -1,3 +1,5 @@
+import { repoFileUrl } from "@/shared/links";
+
 /** Better Auth providerId for the incremental Google Search Console connection.
  *  Kept in `shared` so both server (auth config, GSC client) and client (connect
  *  button) can reference it without importing the server-only auth config. */
@@ -13,5 +15,6 @@ export const GSC_OAUTH_SCOPES = [
   GSC_DATA_SCOPE,
 ] as const;
 
-export const GSC_SELF_HOSTED_SETUP_DOCS_URL =
-  "https://github.com/every-app/open-seo/blob/main/docs/SELF_HOSTING_GOOGLE_SEARCH_CONSOLE.md";
+export const GSC_SELF_HOSTED_SETUP_DOCS_URL = repoFileUrl(
+  "docs/SELF_HOSTING_GOOGLE_SEARCH_CONSOLE.md",
+);

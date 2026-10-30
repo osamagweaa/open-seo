@@ -73,6 +73,7 @@ import {
 } from "@/server/mcp/tools/project-context";
 import { listSavedKeywordsTool } from "@/server/mcp/tools/list-saved-keywords";
 import { removeSavedKeywordsTool } from "@/server/mcp/tools/remove-saved-keywords";
+import { MCP_SERVER_ICON_URL, PROJECT_WEBSITE_URL } from "@/shared/links";
 import {
   findSerpCompetitorsTool,
   getGoogleBusinessQuestionsTool,
@@ -339,10 +340,10 @@ export function createOpenSeoMcpServer(
       version: "0.0.12",
       description:
         "SEO research tools for AI agents: keyword research and metrics, SERP and local SERP results, domain and backlink analysis, rank tracking, and Google Search Console performance.",
-      websiteUrl: "https://openseo.so",
+      websiteUrl: PROJECT_WEBSITE_URL,
       icons: [
         {
-          src: "https://openseo.so/android-chrome-512x512.png",
+          src: MCP_SERVER_ICON_URL,
           mimeType: "image/png",
           sizes: ["512x512"],
         },
