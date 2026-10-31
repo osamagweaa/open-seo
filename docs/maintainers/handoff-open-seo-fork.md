@@ -59,18 +59,21 @@ You are continuing work from a previous chat. That chat is gone; this file is th
 
 ## 6. Decisions
 
-| Decision                                                                            | Why                                                                                                       |
-| ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| Target is a self-hosted instance, not a hosted SaaS                                 | User's choice at planning                                                                                 |
-| Branding: decouple only, keep the OpenSEO name                                      | User's choice at planning                                                                                 |
-| Deploy on a Runpod CPU pod, not Cloudflare                                          | User has Runpod credit and does not use Cloudflare                                                        |
-| Single pod runs the repo's existing single-container flow in `AUTH_MODE=password`   | The multi-container Docker edition does not fit one pod; password mode gives real sign-in on a public URL |
-| State lives on a network volume at `/workspace`                                     | CPU pods cannot use a local persistent disk; container disk is wiped on stop or restart                   |
-| Secrets are generated on first start and kept on the volume                         | Keeps them out of pod config and chat                                                                     |
-| Telemetry is opt-in via `OPENSEO_TELEMETRY_POSTHOG_KEY`                             | Upstream's PostHog key was removed from the source                                                        |
-| Docker standalone gaps are fixed in code                                            | User asked: "fix the docker standalone gaps too"                                                          |
-| `GOOGLE_MAPS_API_KEY` and `CRAWLER_ACCESS_SECRET` are passed through the Docker env | Matches how other optional credentials work                                                               |
-| Skill files, the SAM fact sheet and hosted-only screens are left unchanged          | Review control plane and hosted-only code                                                                 |
+| Decision                                                                                       | Why                                                                                                          |
+| ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Target is a self-hosted instance, not a hosted SaaS                                            | User's choice at planning                                                                                    |
+| Branding: decouple only, keep the OpenSEO name                                                 | User's choice at planning                                                                                    |
+| Deploy on a Runpod CPU pod, not Cloudflare                                                     | User has Runpod credit and does not use Cloudflare                                                           |
+| Single pod runs the repo's existing single-container flow in `AUTH_MODE=password`              | The multi-container Docker edition does not fit one pod; password mode gives real sign-in on a public URL    |
+| State lives on a network volume at `/workspace`                                                | CPU pods cannot use a local persistent disk; container disk is wiped on stop or restart                      |
+| Secrets are generated on first start and kept on the volume                                    | Keeps them out of pod config and chat                                                                        |
+| Telemetry is opt-in via `OPENSEO_TELEMETRY_POSTHOG_KEY`                                        | Upstream's PostHog key was removed from the source                                                           |
+| Docker standalone gaps are fixed in code                                                       | User asked: "fix the docker standalone gaps too"                                                             |
+| `GOOGLE_MAPS_API_KEY` and `CRAWLER_ACCESS_SECRET` are passed through the Docker env            | Matches how other optional credentials work                                                                  |
+| Skill files, the SAM fact sheet and hosted-only screens are left unchanged                     | Review control plane and hosted-only code                                                                    |
+| Wake and stop through a Cloudflare Worker, `scripts/runpod-gate`                               | User's decision: "Use the Cloudflare worker and stop the pod after 5 minutes ideal."                         |
+| Idle means no traffic through the Worker for 5 minutes, and agents on `/mcp` count as activity | 5 minutes is the user's. Counting agents is the recommended default, applied without the user's confirmation |
+| Worker and pod secrets are set by the user in GitHub and Runpod, never in chat                 | Hard rule 11                                                                                                 |
 
 ## 7. Changed / rejected
 
@@ -81,6 +84,8 @@ You are continuing work from a previous chat. That chat is gone; this file is th
 - Not built, feature rather than bug: scheduled Local SEO checks in any edition.
 - Not done: editing `.agents/skills/**` and `plugins/openseo/skills/**` links (review control plane, shipped skill content).
 - Not done: retargeting the upstream-gated workflows `deploy-production.yml`, `deploy-website.yml`, `pr-preview.yml`, `docker-image.yml` (inert on the fork).
+- Front door for wake on access: Vercel function → Cloudflare Worker (Vercel cannot proxy WebSockets; the user chose Cloudflare).
+- In-pod idle watcher using `runpodctl` → idle check in the Worker (no key inside the pod, and it sees all traffic including `/mcp`).
 
 ## 8. Data & facts (exact)
 
@@ -141,47 +146,49 @@ You are continuing work from a previous chat. That chat is gone; this file is th
 
 ## 10. Work state
 
-| Item                                  | Status                          | Location                                                                                                            | Notes                                                                                                 |
-| ------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Draft PR #1                           | Open, CI green at ce03f90       | https://github.com/osamagweaa/open-seo/pull/1                                                                       | Waiting on the user's review; session was subscribed to its events                                    |
-| Telemetry opt-in                      | Done                            | `src/server/lib/self-host-telemetry.ts`, `scripts/selfhost-preflight.ts`, `deploy/alchemy/alchemy.run.ts`           | Test added                                                                                            |
-| Link module and help links            | Done                            | `src/shared/links.ts`                                                                                               | Hosted-only screens untouched                                                                         |
-| E2E helper fix                        | Done                            | `tests/domain-overview-test-utils.ts`                                                                               | Stale "Refine table results" heading; perf spec needs `DOMAIN_FILTER_CPU_THROTTLE=2` on slow machines |
-| Docker standalone fixes               | Done in code and CI image build | `src/standalone-server.ts`, `wrangler.standalone.json`, `scripts/celld/runtime/configure.mjs`, `deploy/standalone/` | Never run in a real Docker daemon                                                                     |
-| Scripts, CODEOWNERS, README, docs     | Done                            | repo root, `docs/`                                                                                                  | Needs maintainer review per `AGENTS.md`                                                               |
-| Manual workflow `deploy-selfhost.yml` | Added, untested                 | `.github/workflows/`                                                                                                | Cloudflare only; no longer the chosen target                                                          |
-| Runpod pod and volume                 | Live and verified               | See section 8                                                                                                       | `/api/health` 200 in password mode, database ok, DataForSEO warning, pages load                       |
-| Admin account                         | Created by the user             | Pod                                                                                                                 | Registration is now closed                                                                            |
-| DataForSEO key                        | Not set                         | Pod env                                                                                                             | Blocks all SEO data features                                                                          |
-| SEO data features with real data      | Not verified                    | Pod                                                                                                                 | No key available in the chat                                                                          |
-| MCP on the pod                        | Not verified on the pod         | Pod                                                                                                                 | Verified earlier on a local dev server in password mode                                               |
+| Item                                  | Status                                        | Location                                                                                                            | Notes                                                                                                 |
+| ------------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Draft PR #1                           | Open, CI green at ce03f90                     | https://github.com/osamagweaa/open-seo/pull/1                                                                       | Waiting on the user's review; session was subscribed to its events                                    |
+| Telemetry opt-in                      | Done                                          | `src/server/lib/self-host-telemetry.ts`, `scripts/selfhost-preflight.ts`, `deploy/alchemy/alchemy.run.ts`           | Test added                                                                                            |
+| Link module and help links            | Done                                          | `src/shared/links.ts`                                                                                               | Hosted-only screens untouched                                                                         |
+| E2E helper fix                        | Done                                          | `tests/domain-overview-test-utils.ts`                                                                               | Stale "Refine table results" heading; perf spec needs `DOMAIN_FILTER_CPU_THROTTLE=2` on slow machines |
+| Docker standalone fixes               | Done in code and CI image build               | `src/standalone-server.ts`, `wrangler.standalone.json`, `scripts/celld/runtime/configure.mjs`, `deploy/standalone/` | Never run in a real Docker daemon                                                                     |
+| Scripts, CODEOWNERS, README, docs     | Done                                          | repo root, `docs/`                                                                                                  | Needs maintainer review per `AGENTS.md`                                                               |
+| Manual workflow `deploy-selfhost.yml` | Added, untested                               | `.github/workflows/`                                                                                                | Cloudflare only; no longer the chosen target                                                          |
+| Runpod pod and volume                 | Live and verified                             | See section 8                                                                                                       | `/api/health` 200 in password mode, database ok, DataForSEO warning, pages load                       |
+| Admin account                         | Created by the user                           | Pod                                                                                                                 | Registration is now closed                                                                            |
+| DataForSEO key                        | Not set                                       | Pod env                                                                                                             | Blocks all SEO data features                                                                          |
+| SEO data features with real data      | Not verified                                  | Pod                                                                                                                 | No key available in the chat                                                                          |
+| MCP on the pod                        | Not verified on the pod                       | Pod                                                                                                                 | Verified earlier on a local dev server in password mode                                               |
+| Gate Worker                           | Built and unit tested (9 tests), not deployed | `scripts/runpod-gate/index.ts`, `wrangler.jsonc`, `gate.test.ts`                                                    | Needs the user's Cloudflare and Runpod credentials                                                    |
+| Gate deploy workflow                  | Added, not run                                | `.github/workflows/deploy-runpod-gate.yml`                                                                          | Runs only from `main`, so PR #1 must merge first                                                      |
+| Idle logout option                    | Done, tested                                  | `src/lib/auth-session-idle.ts`, `src/lib/auth.ts`                                                                   | Set `OPENSEO_SESSION_IDLE_MINUTES=5` on the pod; not yet set                                          |
+| Build cache on the volume             | Done, measured on the live pod                | `deploy/runpod/start.sh`                                                                                            | First restart 182 s (build), second 111 s (cache hit), from pod start to health 200                   |
 
 ## 11. Next steps
 
-1. **Next action:** Get the user's approval on the auto-stop and wake-on-access design below, then build it in small pull requests. Nothing is built yet.
-2. The user signs up at DataForSEO, copies the Base64 credentials, and adds `DATAFORSEO_API_KEY` in the Runpod console under Edit Pod. Then run one keyword search to confirm data returns. Test with the $1 trial credit before any $50 top-up.
-3. If pausing: stop the pod with the Runpod `pod-action` stop on `jl8n558l4bwyu3`. Compute billing stops; the volume keeps its data.
-4. When the user decides, merge PR #1, then change the pod's clone branch to `main` and update `docs/SELF_HOSTING_RUNPOD.md` if needed.
-5. Optional: connect Google Search Console with the user's own Google OAuth app; add `OPENROUTER_API_KEY` for the SAM agent.
-6. Optional: add scheduled Local SEO checks as a new feature.
+1. **Next action:** Deploy the gate Worker. The user adds three GitHub secrets, `RUNPOD_API_KEY` (created in the Runpod console), `CLOUDFLARE_API_TOKEN` (permissions: Workers Scripts edit, Workers KV Storage edit) and `CLOUDFLARE_ACCOUNT_ID`, then merges PR #1 and runs the **Deploy Runpod Gate** workflow from `main`. Alternative from the user's computer: `pnpm exec wrangler deploy -c scripts/runpod-gate/wrangler.jsonc`, then `pnpm exec wrangler secret put RUNPOD_API_KEY -c scripts/runpod-gate/wrangler.jsonc`.
+2. After the Worker address is known, edit the pod's environment: `BETTER_AUTH_URL` = the Worker address and `OPENSEO_SESSION_IDLE_MINUTES` = `5`. Saving resets the pod.
+3. Verify end to end with evidence: stop the pod, open the Worker address, confirm the waiting page then the app; leave it idle over 5 minutes and read the pod's status with `get-pod` to confirm `EXITED`. Also confirm sign-in works on the Worker address and that live chat (WebSocket) works through it.
+4. The user signs up at DataForSEO, copies the Base64 credentials, and adds `DATAFORSEO_API_KEY` under Edit Pod. Run one keyword search to confirm data returns. Test with the $1 trial credit before any $50 top-up.
+5. After PR #1 merges, change the pod's clone branch from `claude/modest-maxwell-ry8qh2` to `main`.
+6. Optional: Google Search Console with the user's own Google OAuth app; `OPENROUTER_API_KEY` for the SAM agent; scheduled Local SEO checks.
 
-**Design proposal for item 1 (not approved yet):**
+**As built (commit a163afa):**
 
-- **Idle logout, in the app.** Add an env setting, for example `OPENSEO_SESSION_IDLE_MINUTES`, that sets Better Auth `session.expiresIn` to that many minutes with a short `updateAge`, so activity keeps the session alive and idle ends it. Default stays the current behavior. Change goes in `src/lib/auth-config.ts` with a test.
-- **Idle stop, in the pod.** A watcher started by `deploy/runpod/start.sh` stops the pod after the idle period with no real activity. Count requests, not just browser sessions, so agents using an API key through `/mcp` are not cut off. Ignore `/api/health` and the loopback scheduler. Do not stop while a site audit or workflow is running. Stop through the Runpod API.
-- **Wake on access.** A stopped pod has no public address, so something always on must receive the visit. Recommended: a free Cloudflare Worker, holding a Runpod API key as a secret. It checks the pod, starts it if stopped, shows a "starting" page that refreshes, then reverse-proxies to the pod, including WebSockets for SAM. Set `BETTER_AUTH_URL` to the Worker's address so sign-in stays on one stable address. Alternative: a Vercel function, which cannot proxy WebSockets.
-- **Faster wake.** Today every start reclones, installs and builds, about 3.5 minutes (first deploy: created 22:18:54, health 200 at 22:22:13). Build once and keep the build on the network volume, or publish a prebuilt image from GitHub Actions, so a wake takes about a minute.
-- **Trade-offs to state to the user.** Rank tracking and AI visibility checks only run while the pod is up, so they are skipped while stopped. Stopping kills anything still running. The wake address is public and can start the pod, which costs a few cents, and the app login still protects the data. Example cost at one hour of use per day: 0.08 x 30 = $2.40 per month plus about $0.70 for the volume.
-- **Needs the user.** A free Cloudflare account (or Vercel), and a Runpod API key created in the Runpod console and stored as a Worker secret by the user, never pasted into chat.
+- **Worker** (`scripts/runpod-gate`): checks the pod through the Runpod API at `https://api.runpod.io/v2`, starts it if `EXITED`, shows a refreshing waiting page, then reverse-proxies including WebSockets. Records activity in KV at most every 30 seconds. A once-a-minute cron stops a `RUNNING` pod after `IDLE_MINUTES` (default 5) with no traffic. `POD_ID` is set in `wrangler.jsonc`.
+- **Pod** (`deploy/runpod/start.sh`): allows the pod's own proxy host (`ALLOWED_HOST`) so requests arriving through the Worker are accepted, and keeps the build on the volume keyed by commit.
+- **App**: `OPENSEO_SESSION_IDLE_MINUTES` sets a sliding session so idleness logs the user out.
+- **Trade-offs told to the user:** scheduled rank tracking and AI visibility checks run only while the pod is up; stopping ends running work, such as an audit; the Worker address is public and can start the pod; use the Worker address only, since a pod with no traffic through the Worker is stopped even if used directly. Example cost at one hour of use per day: $2.40 per month plus about $0.70 for the volume.
+- **Not yet tested live:** the Worker against the real Runpod and Cloudflare APIs, starting an `EXITED` CPU pod through the API (a stopped pod stays tied to its machine; if start fails, fall back to terminating and recreating the pod with the same volume and updating `POD_ID`), WebSocket proxying, and the idle stop.
 
 ## 12. Open questions
 
 - "I don't use it": confirm this meant Cloudflare. All deploy work after it assumed so.
 - Does the $1 DataForSEO trial credit work over the REST API? The pricing page mentions the Playground, MCP and integrations. Unverified.
 - Which app features work with no DataForSEO key? From the code inventory, the site audit crawler, Search Console views, reports and project context do not need it, and Lighthouse does. Not verified on the pod.
-- Should the pod keep running while the user decides on the key? It costs $0.08 per hour.
-- Front door for wake-on-access: Cloudflare Worker (recommended) or Vercel? "I don't use it" may rule out Cloudflare; confirm.
-- Idle rule: log out after 5 minutes idle and stop the pod at the same time, or give a longer grace period before stopping? Does an agent using `/mcp` with an API key count as activity? Recommended: yes.
+- The pod `jl8n558l4bwyu3` was left running at $0.08 per hour because the Worker that stops it is not deployed yet. Stop it with `pod-action` stop until the Worker is live, or leave it running?
+- Does an agent using `/mcp` with an API key count as activity? Applied as yes (recommended); the user has not confirmed.
 - Is it acceptable that scheduled rank tracking and AI visibility checks pause while the pod is stopped?
 
 ## 13. Re-attach checklist

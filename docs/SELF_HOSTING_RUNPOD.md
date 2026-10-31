@@ -45,7 +45,7 @@ You can deploy from your own computer instead: `pnpm exec wrangler deploy -c scr
 
 What to expect:
 
-- **A wake takes a few minutes.** The first start after a code change builds the app. Later starts reuse the build kept on the volume and take about a minute.
+- **A wake takes a few minutes.** The first start after a code change builds the app. Later starts reuse the build kept on the volume and took under two minutes when measured: 111 seconds, against 182 seconds with a build.
 - **Scheduled checks pause.** Rank tracking and AI visibility checks run only while the pod is up.
 - **Stopping ends running work.** A site audit still running when the pod stops is lost, so keep the tab open until it finishes.
 - **Anyone can wake the pod.** The Worker address is public and a visit starts the pod, which costs a few cents. The app login still protects your data.
