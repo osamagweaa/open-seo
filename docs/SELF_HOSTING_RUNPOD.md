@@ -1,6 +1,6 @@
 # Runpod Self-Hosting
 
-Run OpenSEO on a single Runpod CPU pod with email and password accounts. The pod clones this repository, builds the app on every start, and keeps its database on a network volume so it survives stops and restarts.
+Run OpenSEO on a single Runpod CPU pod with email and password accounts. The pod clones this repository, builds the app on start, and keeps its database on a network volume so it survives stops and restarts.
 
 Expect about $0.08 per hour for a 2 vCPU pod with 8 GB of memory, plus about $0.70 per month for a 10 GB network volume. Prices change; check the Runpod console.
 
@@ -29,9 +29,9 @@ Edit the pod and add the environment variable `DATAFORSEO_API_KEY` with the base
 
 A small Cloudflare Worker (`scripts/runpod-gate`) sits in front of the pod. It is always on, free, and does three things:
 
-- **Wakes the pod** when you open its address, and shows a waiting page that refreshes by itself.
-- **Passes every request through** to the pod, including the live chat. Browser visits and agents using `/mcp` both count as activity.
-- **Stops the pod** after 5 minutes without traffic. Change this with `IDLE_MINUTES` in `scripts/runpod-gate/wrangler.jsonc`.
+- **Wakes the pod** when you open its address in a browser or an MCP client connects, and shows a waiting page that refreshes by itself. Background requests from a stale tab and scanners do not wake it.
+- **Passes every request through** to the pod, including the live chat. Browser visits, agents using `/mcp` and an open live chat (a connection keeps the pod up for 10 minutes) all count as activity.
+- **Stops the pod** after 5 minutes without traffic, plus up to 1.5 minutes because activity records arrive late. It never stops a pod that is still starting, unless the app has not answered for 20 minutes. Change the idle time with `IDLE_MINUTES` in `scripts/runpod-gate/wrangler.jsonc`.
 
 Set it up once:
 
@@ -45,7 +45,7 @@ You can deploy from your own computer instead: `pnpm exec wrangler deploy -c scr
 
 What to expect:
 
-- **A wake takes several minutes.** Runpod itself took about 3.5 minutes to resume a stopped pod in testing, before the app started. The app then rebuilds if the code changed since the last start, because the saved build is keyed by commit. An in-place restart without a code change took 111 seconds. Expect roughly 4 to 10 minutes.
+- **A wake takes several minutes.** Runpod itself took about 3.5 minutes to resume a stopped pod in testing, before the app started. The app then rebuilds if its files changed since the last start. The saved build is keyed by the app's files, so a docs-only commit does not trigger a rebuild. An in-place restart without a code change took 111 seconds. Expect roughly 4 to 10 minutes.
 - **Scheduled checks pause.** Rank tracking and AI visibility checks run only while the pod is up.
 - **Stopping ends running work.** A site audit still running when the pod stops is lost, so keep the tab open until it finishes.
 - **Anyone can wake the pod.** The Worker address is public and a visit starts the pod, which costs a few cents. The app login still protects your data.

@@ -3,9 +3,9 @@
 # and runs this script from the checkout; see docs/SELF_HOSTING_RUNPOD.md.
 #
 # Everything that must outlive a restart lives on the network volume at
-# /workspace: the database and the two secrets generated below. The checkout,
-# dependencies and build output sit on the container disk and are rebuilt on
-# every start.
+# /workspace: the database, the two secrets generated below and the build
+# output. The checkout and dependencies sit on the container disk and are set up
+# again on every start; the build is reused while the app's files are unchanged.
 set -euo pipefail
 
 STATE="${OPENSEO_STATE_DIR:-/workspace/openseo}"
@@ -46,9 +46,13 @@ corepack enable
 corepack prepare pnpm@10.30.1 --activate
 pnpm install --frozen-lockfile
 
-# Keep the build on the volume, keyed by commit, so a restart skips the
-# multi-minute build. The entrypoint reuses it while the build env is unchanged.
-BUILD_DIR="$STATE/build-$(git rev-parse HEAD 2>/dev/null || echo nogit)"
+# Keep the build on the volume so a restart skips the multi-minute build. It is
+# keyed by the content of the app's files, not the commit. Docs, workflows, the
+# gate Worker and these Runpod scripts are not build inputs, so editing them
+# does not force a rebuild. The entrypoint reuses the build while the build env
+# is unchanged.
+BUILD_KEY="$(git ls-files -s -- . ':(exclude)docs' ':(exclude).github' ':(exclude)scripts/runpod-gate' ':(exclude)deploy/runpod' | sha256sum | cut -c1-16)" || BUILD_KEY=nogit
+BUILD_DIR="$STATE/build-$BUILD_KEY"
 mkdir -p "$BUILD_DIR"
 ln -sfn "$BUILD_DIR" dist
 for old in "$STATE"/build-*; do

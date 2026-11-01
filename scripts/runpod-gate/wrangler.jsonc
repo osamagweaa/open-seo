@@ -6,7 +6,7 @@
   // Runs the idle check once a minute.
   "triggers": { "crons": ["* * * * *"] },
   "vars": {
-    "POD_ID": "jl8n558l4bwyu3",
+    "POD_ID": "zhd4ji9fq6jvgj",
     "POD_PORT": "3001",
     "IDLE_MINUTES": "5",
   },
