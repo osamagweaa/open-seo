@@ -53,10 +53,11 @@ You are continuing work from a previous chat. That chat is gone; this file is th
 
 ## 5. Corrections log
 
-| #   | Claude did                                                         | The user wanted                                                                                                                    |
-| --- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | Started a local rehearsal of the pod start script before deploying | "You have MCP connected to RAM pod, just in case you didn't know." Use the connected Runpod tools directly; skip local rehearsals. |
-| 2   | Reported the live page in words only                               | "Open the page, let me see what are you seeing." Show screenshots with SendUserFile.                                               |
+| #   | Claude did                                                                                                                  | The user wanted                                                                                                                                                       |
+| --- | --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Started a local rehearsal of the pod start script before deploying                                                          | "You have MCP connected to RAM pod, just in case you didn't know." Use the connected Runpod tools directly; skip local rehearsals.                                    |
+| 2   | Reported the live page in words only                                                                                        | "Open the page, let me see what are you seeing." Show screenshots with SendUserFile.                                                                                  |
+| 3   | Said Gmail was unreachable after the `claude-for-financial-advisors` Gmail connector failed with "Incompatible auth server" | "No, the Gmail is connected." Use the `Gmail` connector (`mcp__Gmail__*`). When a connector fails, search ToolSearch for another one before reporting it unavailable. |
 
 ## 6. Decisions
 
@@ -152,6 +153,7 @@ You are continuing work from a previous chat. That chat is gone; this file is th
 - The earlier 111 s figure was for an in-place `restart`, not stop then start. Wake time for stop then start is not measured with a warm build; expect about 3.5 minutes of Runpod resume plus app boot.
 - A first poll reported health 200 seven seconds after start. That was a stale answer from the old container, not a real result. Poll for a non-200 first, then two consecutive 200s.
 - **Live results through the Worker, 2026-11-01 (Revision 3):**
+  - Before the fix, at 13:23Z, two wake attempts on the stopped pod `jl8n558l4bwyu3` returned HTTP 502 from the Worker with Runpod's body: `{"detail":"There are not enough free memory on the host machine to start this pod.","status":400}`. The same pod had started at 11:58:55 that morning.
   - Idle stop 1: last request 14:22:38, pod EXITED when read at 14:30:13.
   - Cold wake: request 14:30:28 got the waiting page (HTTP 503), state `starting` after 3 s, ready after 220 s (14:34:08). The build ran on this pod: client build 38.7 s, server listening 14:33:40. The app then served `/`, `/api/health` and `/sign-in` through the Worker with HTTP 200.
   - Idle stop 2: last request 14:34:29, pod EXITED with uptime 621 s (stopped about 14:40:50), so the stop lands 5 to 7 minutes after the last request (5 minutes plus 90 seconds of slack for delayed activity records).
@@ -207,6 +209,9 @@ You are continuing work from a previous chat. That chat is gone; this file is th
 5. Optional: Google Search Console and GA4 with the user's own Google OAuth app (free, no DataForSEO needed); `OPENROUTER_API_KEY` for the SAM agent; scheduled Local SEO checks.
 6. Feature options the user can choose from: Google Merchant Center and Shopping data (recommended first for e-commerce; official API), Google Trends (no official API; unofficial route or a paid provider), Shopify store data. Plan with the user before building.
 7. Improve wake time: `pnpm install` takes 83 s of every wake because the container disk is wiped. Pointing the pnpm store at `/workspace/openseo` would cut it, but needs a live test. Update the waiting page text, which says several minutes.
+8. **Pending user decision, "build recreate":** make the Worker catch Runpod's 400 "not enough free memory on the host", terminate the stuck pod, and create a new one from a stored spec on volume `iu0ap07mv7`. The pod id moves from `wrangler.jsonc` into KV. Wake takes about 4 to 5 minutes; the Worker address does not change. Needs the Runpod key to allow pod create and delete, which is not checked. Not built.
+9. **Check the Runpod balance in the console (Billing).** The API key got HTTP 403 on `get-organization`, so Claude cannot read it. At a zero balance Runpod terminates running pods (the October incident).
+10. Merge draft PR 4 (this handoff) once CI is green.
 
 **As built (PR 3, `main` 34a5d9b):**
 
@@ -225,6 +230,8 @@ You are continuing work from a previous chat. That chat is gone; this file is th
 - Is it acceptable that scheduled rank tracking and AI visibility checks pause while the pod is stopped?
 - **Deferred minors from the PR 3 review:** the status poll forces an activity write (several open waiting tabs could exceed the KV limit of one write per second per key); a second proxy attempt on a request whose body was already used gives a Worker 500 instead of 503; the cron calls the Runpod API every minute while the pod is stopped; the Runpod error body is shown to anonymous visitors (kept because it diagnosed the 400); the waiting page test stubs `Date` as an object with only `now`.
 - **Decided without the user (Revision 3):** a chat WebSocket is not renewed by its messages, only by a 30 minute lease from the connect; an OAuth MCP client's first request can wake the pod; the old pod was not terminated; PR 3 was merged and the Worker redeployed on the user's instruction to finish the work in one session.
+- **Gmail check (2026-11-01):** the user asked whether the host-memory 400 is the same as an earlier Runpod problem. It is not. Support ticket #50571 (2026-10-09 to 2026-10-15, closed) was an idle pod `bzdpbn1p20zmwc` that consumed the whole $15 balance; Runpod terminated it, its local disk was lost, and support granted a $15 goodwill credit and advised network volumes plus an idle shutdown. None of the 22 Runpod threads in the inbox mentions the host-memory 400. The `Gmail` connector works; the `claude-for-financial-advisors` Gmail connector fails.
+- **Not done this session:** terminating the old pod, "build recreate", live tests of WebSocket chat, MCP through the Worker, the 5 minute idle logout, a boot longer than 6.5 minutes, sign-in on the Worker address (needs the user's password), and the DataForSEO key.
 
 ## 13. Re-attach checklist
 
