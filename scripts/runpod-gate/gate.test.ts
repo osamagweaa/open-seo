@@ -13,6 +13,7 @@ function setup(
     actionResponse?: Response;
     lastActivity?: number;
     websocketUntil?: number;
+    bootSeen?: number;
     /** Status the pod's proxy answers app requests with. */
     proxyStatus?: number;
     idleMinutes?: string;
@@ -21,6 +22,9 @@ function setup(
   const store = new Map<string, string>();
   if (options.lastActivity !== undefined) {
     store.set("last_activity", String(options.lastActivity));
+  }
+  if (options.bootSeen !== undefined) {
+    store.set("boot_seen", String(options.bootSeen));
   }
   if (options.websocketUntil !== undefined) {
     store.set("websocket_until", String(options.websocketUntil));
@@ -57,6 +61,7 @@ function setup(
     STATE: {
       get: async (key: string) => store.get(key) ?? null,
       put: async (key: string, value: string) => void store.set(key, value),
+      delete: async (key: string) => void store.delete(key),
     },
   } as unknown as Parameters<typeof gate.fetch>[1];
   const ctx = {
@@ -196,8 +201,16 @@ describe("runpod gate: wake rules", () => {
     await t.visit("/agents/sam-chat/s1", { ...BROWSER, upgrade: "websocket" });
 
     expect(Number(t.store.get("websocket_until"))).toBeGreaterThan(
-      Date.now() + 5 * 60_000,
+      Date.now() + 20 * 60_000,
     );
+  });
+
+  it("wakes the pod for an OAuth token refresh from an MCP client", async () => {
+    const t = setup({ podStatus: "EXITED" });
+
+    await t.visit("/api/auth/oauth2/token", { accept: "*/*" });
+
+    expect(t.actions).toEqual(["start"]);
   });
 });
 
@@ -221,12 +234,14 @@ async function waitingPage(podState: string) {
 }
 
 describe("runpod gate: waiting page", () => {
-  it("reloads when the pod has stopped under it, which wakes it again", async () => {
+  it("tells the user to reload when the pod has stopped, instead of waking it again", async () => {
     const page = await waitingPage("stopped");
 
     await page.timers[0]?.();
 
-    expect(page.reload).toHaveBeenCalled();
+    expect(page.reload).not.toHaveBeenCalled();
+    expect(page.message.textContent).toContain("Reload");
+    expect(page.timers).toHaveLength(1);
   });
 
   it("gives up with a message instead of polling forever", async () => {
@@ -288,6 +303,37 @@ describe("runpod gate: idle stop", () => {
     await t.runIdleCheck();
 
     expect(t.actions).toEqual([]);
+  });
+
+  it("does not stop a pod in the minute after it was seen starting", async () => {
+    // The status poll's activity write can lag behind the cron's read.
+    const t = setup({
+      lastActivity: Date.now() - 30 * 60_000,
+      bootSeen: Date.now() - 60_000,
+    });
+
+    await t.runIdleCheck();
+
+    expect(t.actions).toEqual([]);
+  });
+
+  it("remembers that it saw the pod starting", async () => {
+    const t = setup({ appUp: false, lastActivity: Date.now() - 8 * 60_000 });
+
+    await t.runIdleCheck();
+
+    expect(t.store.has("boot_seen")).toBe(true);
+  });
+
+  it("stops an idle pod once a full window has passed since it was seen starting", async () => {
+    const t = setup({
+      lastActivity: Date.now() - 30 * 60_000,
+      bootSeen: Date.now() - 8 * 60_000,
+    });
+
+    await t.runIdleCheck();
+
+    expect(t.actions).toEqual(["stop"]);
   });
 
   it("leaves the pod alone while a WebSocket lease is open", async () => {

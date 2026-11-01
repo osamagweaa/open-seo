@@ -39,13 +39,17 @@ const BOOT_GRACE_MS = 20 * 60_000;
 // A WebSocket (the live chat) sends no further HTTP requests, so connecting
 // counts as activity for this long.
 const WEBSOCKET_KEY = "websocket_until";
-const WEBSOCKET_LEASE_MS = 10 * 60_000;
+const WEBSOCKET_LEASE_MS = 30 * 60_000;
+// The cron notes each minute that it sees the pod starting. Right after the app
+// comes up, the activity write from the waiting page may not have reached the
+// cron yet, so the stop also waits a full idle window after this note.
+const BOOT_KEY = "boot_seen";
 const NO_WAKE_PATHS =
   /^\/(favicon\.ico|robots\.txt|apple-touch-icon.*|sitemap\.xml)$/;
 
 // Only a person opening a page or an MCP client starts the pod. Background
 // requests from a stale tab and scanners probing this public address do not.
-const MCP_PATHS = /^\/(mcp|\.well-known)(\/|$)/;
+const MCP_PATHS = /^\/(mcp|\.well-known|api\/auth\/oauth2)(\/|$)/;
 function canWake(request: Request, pathname: string) {
   return (
     (request.headers.get("accept") ?? "").includes("text/html") ||
@@ -188,8 +192,11 @@ async function poll() {
   try {
     const r = await fetch("/__gate/status", { cache: "no-store" });
     const s = await r.json();
-    // A stopped pod is woken by the reload.
-    if (s.state === "ready" || s.state === "stopped") return location.reload();
+    if (s.state === "ready") return location.reload();
+    if (s.state === "stopped") {
+      document.getElementById("msg").textContent = "The server stopped. Reload this page to start it again.";
+      return;
+    }
     if (s.state === "error") {
       document.getElementById("msg").textContent = "The server could not be started. " + s.message;
       return;
@@ -284,13 +291,20 @@ export default {
     const websocketUntil = Number(await env.STATE.get(WEBSOCKET_KEY));
     if (now < websocketUntil || now - last < idleMs + IDLE_SLACK_MS) return;
 
+    const bootSeen = Number(await env.STATE.get(BOOT_KEY));
     const state = await podState(env);
     if (state.kind === "stopped" || state.kind === "error") return;
     // A pod that is still starting is left alone until the boot grace is over.
-    if (state.kind === "starting" && now - last < BOOT_GRACE_MS) return;
+    if (state.kind === "starting" && now - last < BOOT_GRACE_MS) {
+      await env.STATE.put(BOOT_KEY, String(now));
+      return;
+    }
+    if (state.kind === "ready" && now - bootSeen < idleMs + IDLE_SLACK_MS)
+      return;
     await runpod(env, "/action", {
       method: "POST",
       body: JSON.stringify({ action: "stop" }),
     });
+    await env.STATE.delete(BOOT_KEY);
   },
 } satisfies ExportedHandler<Env>;

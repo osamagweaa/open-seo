@@ -29,8 +29,8 @@ Edit the pod and add the environment variable `DATAFORSEO_API_KEY` with the base
 
 A small Cloudflare Worker (`scripts/runpod-gate`) sits in front of the pod. It is always on, free, and does three things:
 
-- **Wakes the pod** when you open its address in a browser or an MCP client connects, and shows a waiting page that refreshes by itself. Background requests from a stale tab and scanners do not wake it.
-- **Passes every request through** to the pod, including the live chat. Browser visits, agents using `/mcp` and an open live chat (a connection keeps the pod up for 10 minutes) all count as activity.
+- **Wakes the pod** when you open its address in a browser or an MCP client connects, and shows a waiting page that refreshes by itself. If the pod stops while that page is open, the page asks you to reload. Background requests from a stale tab and scanners do not wake it.
+- **Passes every request through** to the pod, including the live chat. Browser visits, agents using `/mcp` and an open live chat (a connection keeps the pod up for 30 minutes) all count as activity.
 - **Stops the pod** after 5 minutes without traffic, plus up to 1.5 minutes because activity records arrive late. It never stops a pod that is still starting, unless the app has not answered for 20 minutes. Change the idle time with `IDLE_MINUTES` in `scripts/runpod-gate/wrangler.jsonc`.
 
 Set it up once:

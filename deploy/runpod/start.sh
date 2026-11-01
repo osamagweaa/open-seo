@@ -48,10 +48,11 @@ pnpm install --frozen-lockfile
 
 # Keep the build on the volume so a restart skips the multi-minute build. It is
 # keyed by the content of the app's files, not the commit. Docs, workflows, the
-# gate Worker and these Runpod scripts are not build inputs, so editing them
-# does not force a rebuild. The entrypoint reuses the build while the build env
-# is unchanged.
-BUILD_KEY="$(git ls-files -s -- . ':(exclude)docs' ':(exclude).github' ':(exclude)scripts/runpod-gate' ':(exclude)deploy/runpod' | sha256sum | cut -c1-16)" || BUILD_KEY=nogit
+# gate Worker, the marketing site, tests, plugins and these Runpod scripts are
+# not build inputs, so editing them does not force a rebuild. Markdown files are
+# kept in the key: the build imports skill files from .agents. The entrypoint
+# reuses the build while the build env is unchanged.
+BUILD_KEY="$(git ls-files -s -- . ':(exclude)docs' ':(exclude).github' ':(exclude)scripts/runpod-gate' ':(exclude)deploy/runpod' ':(exclude)web' ':(exclude)tests' ':(exclude)plugins' ':(exclude).claude' ':(exclude)specs' ':(exclude).oss-scanner' | sha256sum | cut -c1-16)" || BUILD_KEY=nogit
 BUILD_DIR="$STATE/build-$BUILD_KEY"
 mkdir -p "$BUILD_DIR"
 ln -sfn "$BUILD_DIR" dist
