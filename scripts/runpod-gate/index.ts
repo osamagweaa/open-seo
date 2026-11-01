@@ -135,7 +135,7 @@ const WAITING_PAGE = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>OpenSEO is starting</title>
 <style>body{font:16px system-ui,sans-serif;display:grid;place-items:center;min-height:100vh;margin:0;background:#f0f0f0;color:#1a1a1a}main{max-width:26rem;padding:1.5rem;text-align:center}p{color:#555}</style></head>
-<body><main><h1>OpenSEO is starting</h1><p id="msg">Waking the server. This usually takes one to four minutes. This page refreshes by itself.</p></main>
+<body><main><h1>OpenSEO is starting</h1><p id="msg">Waking the server. This usually takes several minutes. This page refreshes by itself.</p></main>
 <script>
 async function poll() {
   try {
