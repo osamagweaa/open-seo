@@ -32,6 +32,7 @@ import { CopyButton } from "@/client/components/CopyButton";
 import { useOrganizations } from "@/client/features/settings/useOrganizations";
 import { captureClientEvent } from "@/client/lib/posthog";
 import { authClient } from "@/lib/auth-client";
+import { repoFileUrl } from "@/shared/links";
 
 // Better Auth rejects longer names with INVALID_NAME_LENGTH.
 const MAX_KEY_NAME_LENGTH = 32;
@@ -145,7 +146,7 @@ export function ApiKeySettings() {
           <p className="mt-1 text-sm">
             <a
               className="text-primary underline-offset-4 hover:underline"
-              href="https://openseo.so/docs/mcp"
+              href={repoFileUrl("web/content/docs/mcp.md")}
               target="_blank"
               rel="noreferrer"
             >

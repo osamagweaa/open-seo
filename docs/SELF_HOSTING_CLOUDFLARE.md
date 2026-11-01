@@ -17,19 +17,10 @@ Related guides:
 
 ## 1) Clone your OpenSEO repo
 
-Fork `every-app/open-seo` on GitHub if you want a repo you control, then clone it locally:
+Clone this repository locally:
 
 ```bash
-git clone https://github.com/YOUR_GITHUB_USER/open-seo.git
-cd open-seo
-corepack enable
-pnpm install
-```
-
-If you do not need a fork, clone the upstream repo instead:
-
-```bash
-git clone https://github.com/every-app/open-seo.git
+git clone https://github.com/osamagweaa/open-seo.git
 cd open-seo
 corepack enable
 pnpm install

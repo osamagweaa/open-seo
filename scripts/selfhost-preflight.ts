@@ -14,12 +14,14 @@ import {
 import { isTelemetryOptOutValue } from "../src/shared/selfhost-checks";
 import { version } from "../package.json";
 
-const SELF_HOST_POSTHOG_KEY =
-  "phc_xaXj4vE4LikxfvR7q6EHemAYNBSZW4hQkqor7fpf8aGT";
-const SELF_HOST_POSTHOG_HOST = "https://us.i.posthog.com";
+// Opt-in: reported only when the operator supplies their own PostHog key.
+const TELEMETRY_POSTHOG_KEY = process.env.OPENSEO_TELEMETRY_POSTHOG_KEY;
+const TELEMETRY_POSTHOG_HOST =
+  process.env.OPENSEO_TELEMETRY_POSTHOG_HOST || "https://us.i.posthog.com";
 
 function telemetryDisabled(): boolean {
   return (
+    !TELEMETRY_POSTHOG_KEY ||
     isTelemetryOptOutValue(process.env.OPENSEO_TELEMETRY_DISABLED) ||
     isTelemetryOptOutValue(process.env.DO_NOT_TRACK)
   );
@@ -32,12 +34,12 @@ async function sendPreflightFailedBeacon(failedChecks: string[]) {
   if (telemetryDisabled()) return;
 
   try {
-    await fetch(`${SELF_HOST_POSTHOG_HOST}/i/v0/e/`, {
+    await fetch(`${TELEMETRY_POSTHOG_HOST}/i/v0/e/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       signal: AbortSignal.timeout(5000),
       body: JSON.stringify({
-        api_key: SELF_HOST_POSTHOG_KEY,
+        api_key: TELEMETRY_POSTHOG_KEY,
         event: "self_host.preflight_failed",
         distinct_id: crypto.randomUUID(),
         properties: {

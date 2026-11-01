@@ -59,13 +59,15 @@ Set credentials in `deploy/standalone/.env`, then apply them without rebuilding:
 docker compose up -d --force-recreate init web crawl-gateway
 ```
 
-| Variable                                   | Purpose                                                                      |
-| ------------------------------------------ | ---------------------------------------------------------------------------- |
-| `DATAFORSEO_API_KEY`                       | Base64-encoded `login:password`; keyword, backlink, rank and site data       |
-| `OPENROUTER_API_KEY`                       | SAM conversations, website research and summaries                            |
-| `OPENROUTER_MODEL`                         | Optional model override                                                      |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Optional Search Console and Analytics linking with your own Google OAuth app |
-| `CONTEXT_API_KEY`                          | Optional JavaScript rendering for site audits                                |
+| Variable                                   | Purpose                                                                                 |
+| ------------------------------------------ | --------------------------------------------------------------------------------------- |
+| `DATAFORSEO_API_KEY`                       | Base64-encoded `login:password`; keyword, backlink, rank and site data                  |
+| `OPENROUTER_API_KEY`                       | SAM conversations, website research and summaries                                       |
+| `OPENROUTER_MODEL`                         | Optional model override                                                                 |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Optional Search Console and Analytics linking with your own Google OAuth app            |
+| `CONTEXT_API_KEY`                          | Optional JavaScript rendering for site audits                                           |
+| `GOOGLE_MAPS_API_KEY`                      | Optional Local SEO map tiles; see [`GOOGLE_MAPS_SETUP.md`](./GOOGLE_MAPS_SETUP.md)      |
+| `CRAWLER_ACCESS_SECRET`                    | Optional 32+ character secret that lets audits replay a saved Shopify crawler signature |
 
 For Google, register your own OAuth application with these redirect URLs under your public address: `/api/gsc/oauth/callback` for Search Console and `/api/ga4/oauth/callback` for Analytics. See [`SELF_HOSTING_GOOGLE_SEARCH_CONSOLE.md`](./SELF_HOSTING_GOOGLE_SEARCH_CONSOLE.md). Signing in with Google is not offered; accounts use email and password.
 

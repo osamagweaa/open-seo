@@ -2,6 +2,7 @@ import { ProjectRepository } from "@/server/features/projects/repositories/Proje
 import { normalizeAndValidateStartUrl } from "@/server/lib/audit/url-policy";
 import { AppError } from "@/server/lib/errors";
 import { readBoundedText } from "@/server/lib/scrape";
+import { PROJECT_WEBSITE_URL } from "@/shared/links";
 
 // IndexNow engines share every submission with each other, so one accepted
 // request reaches all of them. Bing goes first as the largest participant. Bing
@@ -80,7 +81,9 @@ async function checkKeyFile(host: string, key: string): Promise<KeyFileStatus> {
   let response: Response;
   try {
     response = await fetch(await normalizeAndValidateStartUrl(url), {
-      headers: { "user-agent": "OpenSEO-IndexNow/1.0 (+https://openseo.so)" },
+      headers: {
+        "user-agent": `OpenSEO-IndexNow/1.0 (+${PROJECT_WEBSITE_URL})`,
+      },
       redirect: "manual",
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });

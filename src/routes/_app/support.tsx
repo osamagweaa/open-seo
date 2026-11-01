@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CopyButton } from "@/client/components/CopyButton";
 import { PageHeader } from "@/client/components/PageHeader";
 import {
   Card,
@@ -8,10 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/client/components/ui/card";
-import { SUPPORT_EMAIL } from "@/client/lib/support";
-
-const DISCORD_URL = "https://discord.gg/c9uGs3cFXr";
-const GITHUB_URL = "https://github.com/every-app/open-seo";
+import { ISSUES_URL } from "@/shared/links";
 
 export const Route = createFileRoute("/_app/support")({
   component: SupportPage,
@@ -32,34 +28,8 @@ function SupportPage() {
         </div>
 
         <div className="space-y-3">
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                <h2>Email</h2>
-              </CardTitle>
-              <CardDescription>
-                Send ideas, problems, questions, or feedback directly.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <CopyButton
-                value={SUPPORT_EMAIL}
-                label={SUPPORT_EMAIL}
-                successMessage="Email copied to clipboard"
-                size="sm"
-              />
-            </CardContent>
-          </Card>
-
           <SupportLinkCard
-            href={DISCORD_URL}
-            title="Discord"
-            description="Ask for help, share ideas and learn from the community."
-            cta="Join the Discord"
-          />
-
-          <SupportLinkCard
-            href={`${GITHUB_URL}/issues`}
+            href={ISSUES_URL}
             title="GitHub Issues"
             description="Report bugs or request features on GitHub."
             cta="Open an issue"

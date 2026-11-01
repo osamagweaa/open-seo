@@ -15,9 +15,11 @@ import {
 } from "@/client/components/ui/card";
 import { getClientAuthMode, usesBetterAuthClient } from "@/lib/auth-mode";
 import { getSignInHref, getSignInHrefForLocation } from "@/lib/auth-redirect";
+import { repoFileUrl } from "@/shared/links";
 
-const CLOUDFLARE_SETUP_GUIDE_URL =
-  "https://github.com/every-app/open-seo/blob/main/docs/SELF_HOSTING_CLOUDFLARE.md#2-configure-authentication-and-secrets";
+const CLOUDFLARE_SETUP_GUIDE_URL = repoFileUrl(
+  "docs/SELF_HOSTING_CLOUDFLARE.md#2-configure-authentication-and-secrets",
+);
 
 type CardProps = {
   message: string;

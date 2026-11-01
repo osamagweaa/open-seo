@@ -90,6 +90,7 @@ describe("maybeSendSelfHostHeartbeat", () => {
     vi.stubEnv("AUTH_MODE", "cloudflare_access");
     vi.stubEnv("OPENSEO_TELEMETRY_DISABLED", "");
     vi.stubEnv("DO_NOT_TRACK", "");
+    vi.stubEnv("OPENSEO_TELEMETRY_POSTHOG_KEY", "phc_operator_key");
   });
 
   afterEach(() => {
@@ -144,6 +145,8 @@ describe("maybeSendSelfHostHeartbeat", () => {
     ["AUTH_MODE", "everyapp"],
     ["OPENSEO_TELEMETRY_DISABLED", "1"],
     ["DO_NOT_TRACK", "1"],
+    // Opt-in: no operator-supplied PostHog key means nothing is reported.
+    ["OPENSEO_TELEMETRY_POSTHOG_KEY", ""],
   ])("does not send when %s=%s", async (name, value) => {
     vi.stubEnv(name, value);
     const harness = createHarness();

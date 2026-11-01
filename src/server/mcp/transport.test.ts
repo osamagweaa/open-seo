@@ -47,10 +47,10 @@ vi.mock("@/server/mcp/server", () => ({
       title: "OpenSEO",
       version: "0.0.11",
       description: "SEO research tools for AI agents",
-      websiteUrl: "https://openseo.so",
+      websiteUrl: "https://github.com/osamagweaa/open-seo",
       icons: [
         {
-          src: "https://openseo.so/android-chrome-512x512.png",
+          src: "https://raw.githubusercontent.com/osamagweaa/open-seo/main/src/public/android-chrome-512x512.png",
           mimeType: "image/png",
           sizes: ["512x512"],
         },

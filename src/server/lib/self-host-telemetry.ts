@@ -21,9 +21,9 @@ import {
 import { getSetupIssueSummary } from "@/server/lib/setup-status";
 import { isTelemetryOptOutValue } from "@/shared/selfhost-checks";
 
-const SELF_HOST_POSTHOG_KEY =
-  "phc_xaXj4vE4LikxfvR7q6EHemAYNBSZW4hQkqor7fpf8aGT";
-const SELF_HOST_POSTHOG_HOST = "https://us.i.posthog.com";
+// Opt-in: the operator supplies their own PostHog project key. With no key
+// nothing is claimed, counted or sent.
+const DEFAULT_TELEMETRY_POSTHOG_HOST = "https://us.i.posthog.com";
 
 const DAILY_HEARTBEAT_INTERVAL_MS = 24 * 60 * 60 * 1000;
 // During the first two hours after install, heartbeat every 5 minutes so the
@@ -137,7 +137,7 @@ async function telemetryIsDisabled() {
   if (isTelemetryOptOutValue(await getOptionalEnvValue("DO_NOT_TRACK"))) {
     return true;
   }
-  return false;
+  return !(await getOptionalEnvValue("OPENSEO_TELEMETRY_POSTHOG_KEY"));
 }
 
 async function claimHeartbeat(now: Date): Promise<ClaimedHeartbeat | null> {
@@ -232,8 +232,12 @@ async function sendHeartbeat(
   installId: string,
   properties: HeartbeatProperties,
 ) {
-  const client = new PostHog(SELF_HOST_POSTHOG_KEY, {
-    host: SELF_HOST_POSTHOG_HOST,
+  const apiKey = await getOptionalEnvValue("OPENSEO_TELEMETRY_POSTHOG_KEY");
+  if (!apiKey) return;
+  const client = new PostHog(apiKey, {
+    host:
+      (await getOptionalEnvValue("OPENSEO_TELEMETRY_POSTHOG_HOST")) ||
+      DEFAULT_TELEMETRY_POSTHOG_HOST,
     flushAt: 1,
     flushInterval: 0,
     disableGeoip: true,

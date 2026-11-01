@@ -31,7 +31,7 @@ For ease of review, I would appreciate if you used the `/simple-issue-descriptio
 Install it with:
 
 ```sh
-npx skills add every-app/open-seo --skill simple-issue-description
+npx skills add osamagweaa/open-seo --skill simple-issue-description
 ```
 
 See [Set up OpenSEO Agent Skills](https://openseo.so/docs/skills/setup) for other install options.
@@ -55,7 +55,7 @@ These are planned features and improvements. If you'd like to create an issue an
 
 I know that this may be disappointing for some people. I hope that in 6 months, we have some awesome review process that alleviates my concerns leading to current process.
 
-If you would like to be more involved though, the best way is to [Join our Discord](https://discord.com/invite/c9uGs3cFXr) :
+If you would like to be more involved though, the best way is to join the conversation in [GitHub Issues](https://github.com/osamagweaa/open-seo/issues):
 
 - Help others when they ask questions
 - Share your experiences doing SEO

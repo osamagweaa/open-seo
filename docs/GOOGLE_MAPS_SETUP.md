@@ -34,6 +34,7 @@ Add the key as `GOOGLE_MAPS_API_KEY` in the environment file for your app:
 - Hosted production: `.env.production`.
 - Alchemy self-hosting: `.env.selfhost`.
 - Preview deployments: `.env.preview`.
+- Docker: `deploy/standalone/.env`. See [Enable features](./SELF_HOSTING_DOCKER.md#enable-features).
 
 Set the variable to the key you created. It is a server secret and is not
 included in the client build. The Google
@@ -48,7 +49,8 @@ pnpm dev:agents
 For Cloudflare deployments, the Alchemy deploy commands read the respective
 environment file and install the key as a Worker secret. For deployments
 managed outside Alchemy, set `GOOGLE_MAPS_API_KEY` as a runtime secret on the
-app Worker. Docker reads it from `.env` when the container starts. Restart
+app Worker. On Docker, apply the key with
+`docker compose up -d --force-recreate init web crawl-gateway`. Restart
 or redeploy the server after changing the key; it does not need to be in the
 Vite build environment.
 

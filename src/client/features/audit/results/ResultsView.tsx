@@ -30,6 +30,7 @@ import {
 } from "@/client/components/ui/alert";
 import { DataTableTabs } from "@/client/components/table/DataTableToolbar";
 import { TabsTrigger } from "@/client/components/ui/tabs";
+import { repoFileUrl } from "@/shared/links";
 
 type ResultsTab = "issues" | "pages" | "performance";
 
@@ -133,7 +134,7 @@ export function ResultsView({
             to allow the{" "}
             <a
               className="underline underline-offset-4"
-              href="https://openseo.so/docs/crawler"
+              href={repoFileUrl("web/content/docs/crawler.md")}
               target="_blank"
               rel="noreferrer"
             >
