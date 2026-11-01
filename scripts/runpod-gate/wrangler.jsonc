@@ -10,6 +10,9 @@
     "POD_PORT": "3001",
     "IDLE_MINUTES": "5",
   },
-  // The namespace is created on first deploy. Secret: RUNPOD_API_KEY.
-  "kv_namespaces": [{ "binding": "STATE" }],
+  // Stores the time of the last request. Created in the user's Cloudflare
+  // account as "openseo-gate-state". Secret: RUNPOD_API_KEY.
+  "kv_namespaces": [
+    { "binding": "STATE", "id": "9a2d9ba0f62640c3aa406781ea6986d3" },
+  ],
 }
