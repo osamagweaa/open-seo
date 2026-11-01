@@ -213,7 +213,7 @@ You are continuing work from a previous chat. That chat is gone; this file is th
 - "I don't use it": confirm this meant Cloudflare. All deploy work after it assumed so.
 - Does the $1 DataForSEO trial credit work over the REST API? The pricing page mentions the Playground, MCP and integrations. Unverified.
 - Which app features work with no DataForSEO key? From the code inventory, the site audit crawler, Search Console views, reports and project context do not need it, and Lighthouse does. Not verified on the pod.
-- Pod state: Claude stopped `jl8n558l4bwyu3` on 2026-11-01 after about 34.5 idle hours, then started it once to test, and the last known action is recorded in section 8 and in the final reply. Verify with `get-pod`. The wake path needs the Worker deployed; until then, start it with `pod-action` start or from the Runpod console, and stop it when done.
+- **Final pod state: stopped (status EXITED), as read after the stop call on 2026-11-01.** Claude stopped `jl8n558l4bwyu3` after about 34.5 idle hours, started it once to test (it ran 724 s and was still building the app when stopped, so app readiness after a stop then start was not confirmed to completion), then stopped it again to avoid idle billing. The volume `iu0ap07mv7` is intact. The wake path needs the Worker deployed; until then, start the pod with `pod-action` start or from the Runpod console, wait for `/api/health` to return 200 (poll for a non-200 first, then two 200s), and stop it when done.
 - Does an agent using `/mcp` with an API key count as activity? Applied as yes (recommended); the user has not confirmed.
 - Is it acceptable that scheduled rank tracking and AI visibility checks pause while the pod is stopped?
 
