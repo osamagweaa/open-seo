@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "unipile": {
+      "type": "http",
+      "url": "https://developer.unipile.com/mcp?branch=v2.0",
+      "headers": {
+        "X-API-KEY": "${UNIPILE_API_KEY}"
+      }
+    }
+  }
+}
